@@ -14,11 +14,18 @@ import java.util.*;
 public class BookSellerAgent extends Agent {
   private Hashtable catalogue;
   private BookSellerGui myGui;
+  private int shippingCost;
 
   protected void setup() {
     catalogue = new Hashtable();
     myGui = new BookSellerGui(this);
-    myGui.display();
+	myGui.display();
+
+    Object[] args = getArguments();
+    if (args != null && args.length > 0)
+		shippingCost = Integer.parseInt(args[0].toString());
+	else
+		shippingCost = 10;
 
     //book selling service registration at DF
     DFAgentDescription dfd = new DFAgentDescription();
@@ -73,7 +80,7 @@ public class BookSellerAgent extends Agent {
 	      if (price != null) {
 	        //title found in the catalogue, respond with its price as a proposal
 	        reply.setPerformative(ACLMessage.PROPOSE);
-	        reply.setContent(String.valueOf(price.intValue()));
+	        reply.setContent(String.valueOf(price.intValue() + shippingCost));
 	      }
 	      else {
 	        //title not found in the catalogue
