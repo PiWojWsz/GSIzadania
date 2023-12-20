@@ -15,17 +15,23 @@ public class BookSellerAgent extends Agent {
   private Hashtable catalogue;
   private BookSellerGui myGui;
   private int shippingCost;
+  private boolean noResponse;
 
   protected void setup() {
     catalogue = new Hashtable();
     myGui = new BookSellerGui(this);
 	myGui.display();
+	shippingCost = 10;
+	noResponse = false;
 
     Object[] args = getArguments();
-    if (args != null && args.length > 0)
-		shippingCost = Integer.parseInt(args[0].toString());
-	else
-		shippingCost = 10;
+    if (args != null) {
+		if (args.length > 0) shippingCost = Integer.parseInt(args[0].toString());
+		if (args.length > 1) noResponse = Boolean.parseBoolean(args[1].toString());
+	}
+
+	  System.out.println("Shipping cost: " + shippingCost);
+	  System.out.println(getAID().getName() + ": NoResponse: " + noResponse);
 
     //book selling service registration at DF
     DFAgentDescription dfd = new DFAgentDescription();
@@ -77,17 +83,24 @@ public class BookSellerAgent extends Agent {
 	      String title = msg.getContent();
 	      ACLMessage reply = msg.createReply();
 	      Integer price = (Integer) catalogue.get(title);
-	      if (price != null) {
-	        //title found in the catalogue, respond with its price as a proposal
-	        reply.setPerformative(ACLMessage.PROPOSE);
-	        reply.setContent(String.valueOf(price.intValue() + shippingCost));
-	      }
-	      else {
-	        //title not found in the catalogue
-	        reply.setPerformative(ACLMessage.REFUSE);
-	        reply.setContent("not-available");
-	      }
-	      myAgent.send(reply);
+		  if (noResponse)
+		  {
+			  System.out.println("No response");
+		  }
+		  else
+		  {
+			  if (price != null) {
+				  //title found in the catalogue, respond with its price as a proposal
+				  reply.setPerformative(ACLMessage.PROPOSE);
+				  reply.setContent(String.valueOf(price.intValue() + shippingCost));
+			  }
+			  else {
+				  //title not found in the catalogue
+				  reply.setPerformative(ACLMessage.REFUSE);
+				  reply.setContent("not-available");
+			  }
+			  myAgent.send(reply);
+		  }
 	    }
 	    else {
 	      block();
