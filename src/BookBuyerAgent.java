@@ -13,12 +13,14 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 public class BookBuyerAgent extends Agent {
   private BookBuyerGui myGui;
   private String targetBookTitle;
+  private int budget;
   
   //list of found sellers
   private AID[] sellerAgents;
   
 	protected void setup() {
 	  targetBookTitle = "";
+	  budget = 130;
 	  System.out.println("Hello! " + getAID().getLocalName() + " is ready for the purchase order.");
 	  myGui = new BookBuyerGui(this);
 	  myGui.display();
@@ -26,7 +28,12 @@ public class BookBuyerAgent extends Agent {
 		//as a CLI argument
 		int interval = 20000;
 		Object[] args = getArguments();
-		if (args != null && args.length > 0) interval = Integer.parseInt(args[0].toString());
+		if (args != null)
+		{
+			if (args.length > 0) interval = Integer.parseInt(args[0].toString());
+			if (args.length > 1) budget = Integer.parseInt(args[1].toString());
+		}
+		System.out.println("Budget: " + budget);
 	  addBehaviour(new TickerBehaviour(this, interval)
 	  {
 		  protected void onTick()
@@ -128,6 +135,14 @@ public class BookBuyerAgent extends Agent {
 	      break;
 	    case 2:
 	      //best proposal consumption - purchase
+			if (bestPrice > budget)
+			{
+				System.out.println("Best price exceeds budget");
+				step = 4;
+				targetBookTitle = "";
+				break;
+			}
+
 	      ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
           order.addReceiver(bestSeller);
 	      order.setContent(targetBookTitle);
@@ -147,6 +162,8 @@ public class BookBuyerAgent extends Agent {
 	          System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " purchased for " + bestPrice + " from " + reply.getSender().getLocalName());
 		  System.out.println(getAID().getLocalName() + ": waiting for the next purchase order.");
 		  targetBookTitle = "";
+		  budget -= bestPrice;
+		  System.out.println("Budget purchase: " + budget);
 	          //myAgent.doDelete();
 	        }
 	        else {
